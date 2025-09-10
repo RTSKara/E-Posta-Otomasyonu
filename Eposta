@@ -1,0 +1,419 @@
+{
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "simple": false,
+        "filters": {},
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmailTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        0,
+        0
+      ],
+      "id": "8458cd04-55c9-4117-a24a-bceb2b50dc5e",
+      "name": "Gmail Trigger",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "KSgKG3Bk2NP8zY02",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "text": "={{ $json.from.value[0].name }}",
+        "attributes": {
+          "attributes": [
+            {
+              "name": "senderName",
+              "description": "Extract the sender's name from the email. if the name is not available, return an empty string",
+              "required": true
+            }
+          ]
+        },
+        "options": {
+          "systemPromptTemplate": "You are an expert extraction algorithm.\nOnly extract relevant information from the text.\nIf you do not know the value of an attribute asked to extract, you may omit the attribute's value."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.informationExtractor",
+      "typeVersion": 1.2,
+      "position": [
+        208,
+        0
+      ],
+      "id": "f6cc7866-5b62-4057-9edb-65c0fc424941",
+      "name": "Information Extractor"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "3de66acb-5e8e-4dc8-b7e4-565616222fc4",
+              "leftValue": "={{ $json.output.senderName }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        560,
+        0
+      ],
+      "id": "b0d94a1a-33a8-4381-b90a-2f3ffbd548dc",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "803363eb-1218-4690-a749-1f5e02c72721",
+              "name": "introduction",
+              "value": "= {{ $json.output.senderName }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        768,
+        -160
+      ],
+      "id": "5695e8ca-0bed-4a55-81a8-dd3ab1005882",
+      "name": "İsim Varsa"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "c0aafb17-6885-4ded-9f92-f8d32a1fb185",
+              "name": "introduction",
+              "value": "Mehaba",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        752,
+        160
+      ],
+      "id": "70637d28-2ee4-4bec-bd39-d2d2ce92d782",
+      "name": "İsim Yoksa"
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "fieldsToMatchString": "İntroduction",
+        "joinMode": "keepNonMatches",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1024,
+        0
+      ],
+      "id": "7f15d47b-c90d-42b7-bd01-08fab09997df",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "615236cf-5599-4c41-b56d-0aed20db5ba0",
+              "name": "İntroduction",
+              "value": "={{ $json.introduction }}",
+              "type": "string"
+            },
+            {
+              "id": "5fe6ed85-a912-4c63-97d3-b33b5802671a",
+              "name": "emailbody",
+              "value": "={{ $('Gmail Trigger').item.json.text }}",
+              "type": "string"
+            },
+            {
+              "id": "4214ef37-3c27-44a1-bbb0-b9d45bc28d6c",
+              "name": "messageId",
+              "value": "={{ $('Gmail Trigger').item.json.id }}",
+              "type": "string"
+            },
+            {
+              "id": "c71eefe8-5b5b-4cba-a1f3-8b963a9f6b8a",
+              "name": "threadId",
+              "value": "={{ $('Gmail Trigger').item.json.threadId }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1200,
+        0
+      ],
+      "id": "e5f8c200-04c3-4d28-a97d-aa2ba661def8",
+      "name": "Notlar"
+    },
+    {
+      "parameters": {
+        "inputText": "={{ $json.emailbody }}",
+        "categories": {
+          "categories": [
+            {
+              "category": "Links",
+              "description": "This includes all emails containing links."
+            },
+            {
+              "category": "Incoming codes",
+              "description": "Codes sent to reset your password or to register somewhere."
+            },
+            {
+              "category": "Payments",
+              "description": "This includes questions abount the payments"
+            },
+            {
+              "category": "Others",
+              "description": "Emails that don't fall into any of the predefined categories"
+            }
+          ]
+        },
+        "options": {
+          "systemPromptTemplate": "Plase share with me the specific {categories} that you would like to use so I can perform the analysis correcty. Once you have provided the categories, I will deliver the answer in JSON format, without explanations."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.textClassifier",
+      "typeVersion": 1.1,
+      "position": [
+        1408,
+        0
+      ],
+      "id": "044927e2-b7d8-4af0-8c76-7c20cc2678bd",
+      "name": "Mail Düzenleyici"
+    },
+    {
+      "parameters": {
+        "operation": "addLabels",
+        "messageId": "={{ $json.messageId }}",
+        "labelIds": [
+          "Label_7696251127376175486"
+        ]
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        1776,
+        -224
+      ],
+      "id": "7a8180ec-f9ce-4342-9906-fc356476da5c",
+      "name": "Lİnkler",
+      "webhookId": "cd6305bd-477f-4bb0-a6ed-7b2c3b92e72a",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "KSgKG3Bk2NP8zY02",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "addLabels",
+        "messageId": "={{ $json.messageId }}",
+        "labelIds": [
+          "Label_745434016702677644"
+        ]
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        1776,
+        -64
+      ],
+      "id": "b9a755a5-5029-4f08-a32d-8cd19667beff",
+      "name": "Kodlar",
+      "webhookId": "f716f7c4-603b-41a4-a539-6a2790dfde09",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "KSgKG3Bk2NP8zY02",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "addLabels",
+        "messageId": "={{ $json.messageId }}",
+        "labelIds": [
+          "Label_7933972064725959852"
+        ]
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        1776,
+        80
+      ],
+      "id": "bd408e6a-1d2d-44f3-9f14-cdac47bec6bd",
+      "name": "Ödemeler",
+      "webhookId": "be184aec-0aa7-4cea-bd6b-7f5b21b711b5",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "KSgKG3Bk2NP8zY02",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Gmail Trigger": {
+      "main": [
+        [
+          {
+            "node": "Information Extractor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Information Extractor": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "İsim Varsa",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "İsim Yoksa",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "İsim Varsa": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "İsim Yoksa": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Notlar",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Notlar": {
+      "main": [
+        [
+          {
+            "node": "Mail Düzenleyici",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Mail Düzenleyici": {
+      "main": [
+        [
+          {
+            "node": "Lİnkler",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Kodlar",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Ödemeler",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    }
+  },
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "a6cdf74dafb8e8ec142ea2ad57042de9bbafe7877e6b9714854bb83db38f3b18"
+  }
+}
